@@ -3,7 +3,6 @@ using common;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using Renci.SshNet;
 
 namespace rabbit_listener
 {
