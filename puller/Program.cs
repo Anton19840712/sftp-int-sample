@@ -1,6 +1,5 @@
 using common;
 using Microsoft.AspNetCore.Connections;
-using puller.background;
 using RabbitMQ.Client;
 using IConnectionFactory = RabbitMQ.Client.IConnectionFactory;
 
@@ -31,5 +30,5 @@ IHostBuilder CreateHostBuilder(string[] args) =>
 				return connectionFactory;
 			});
 
-			services.AddHostedService<FileDownloadService>(); // Регистрация как фонового сервиса
+			services.AddHostedService<FileDownloadService>();
 		});

@@ -1,5 +1,4 @@
 using RabbitMQ.Client;
-using sftp_int_sample.background;
 
 var builder = WebApplication.CreateBuilder(args);
 
