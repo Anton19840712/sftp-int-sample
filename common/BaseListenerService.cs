@@ -1,28 +1,27 @@
 ﻿using System.Text;
-using common;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace listener.background
+namespace common
 {
-	public class ListenerPushSystemServcie : IHostedService
+	public abstract class BaseListenerService : IHostedService
 	{
 		private readonly IConnectionFactory _connectionFactory;
-		private readonly ILogger<ListenerPushSystemServcie> _logger;
-
-		// Директория, в которую будут сохраняться зачитанные из очереди push system queue файлы
-		private readonly string _localDirectory = @"C:\sftp-local-push-system-listener-storage";
+		private readonly ILogger<BaseListenerService> _logger;
 		private IConnection _connection;
 		private IModel _channel;
 		private CancellationTokenSource _cts;
 		private Task _listenerTask;
-		private Task _uploadTask;
 
-		public ListenerPushSystemServcie(
-			SftpConfig config,
+		protected abstract string QueueName { get; }
+		protected abstract string LocalDirectory { get; }
+
+		public BaseListenerService(
 			IConnectionFactory connectionFactory,
-			ILogger<ListenerPushSystemServcie> logger)
+			ILogger<BaseListenerService> logger)
 		{
 			_connectionFactory = connectionFactory;
 			_logger = logger;
@@ -33,19 +32,18 @@ namespace listener.background
 			_cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
 			// Создаем локальную директорию, если она отсутствует
-			if (!Directory.Exists(_localDirectory))
+			if (!Directory.Exists(LocalDirectory))
 			{
-				Directory.CreateDirectory(_localDirectory);
+				Directory.CreateDirectory(LocalDirectory);
 			}
 
-			// Запускаем задачу для обработки сообщений RabbitMQ
 			_listenerTask = Task.Run(() =>
 			{
 				_connection = _connectionFactory.CreateConnection();
 				_channel = _connection.CreateModel();
 
 				_channel.QueueDeclare(
-					"sftp-push-system-queue",
+					QueueName,
 					durable: true,
 					exclusive: false,
 					autoDelete: false,
@@ -59,14 +57,12 @@ namespace listener.background
 						var body = ea.Body.ToArray();
 						var jsonMessage = Encoding.UTF8.GetString(body);
 
-						// Десериализуем сообщение
 						var message = JsonConvert.DeserializeObject<FileMessage>(jsonMessage);
 						if (message != null)
 						{
 							await SaveFileToDiskAsync(message, _cts.Token);
 						}
 
-						// Подтверждаем сообщение
 						_channel.BasicAck(ea.DeliveryTag, false);
 					}
 					catch (Exception ex)
@@ -75,7 +71,7 @@ namespace listener.background
 					}
 				};
 
-				_channel.BasicConsume("sftp-push-system-queue", false, consumer);
+				_channel.BasicConsume(QueueName, false, consumer);
 			}, cancellationToken);
 		}
 
@@ -83,7 +79,10 @@ namespace listener.background
 		{
 			_cts.Cancel();
 
-			await Task.WhenAll(_listenerTask, _uploadTask);
+			if (_listenerTask != null)
+			{
+				await _listenerTask;
+			}
 
 			_channel?.Close();
 			_connection?.Close();
@@ -92,17 +91,14 @@ namespace listener.background
 		private async Task SaveFileToDiskAsync(FileMessage fileMessage, CancellationToken cancellationToken)
 		{
 			var fileNameWithExtension = string.IsNullOrWhiteSpace(fileMessage.FileExtension)
-				? fileMessage.FileName // Если расширение не указано, сохраняем как есть
+				? fileMessage.FileName
 				: $"{Path.GetFileNameWithoutExtension(fileMessage.FileName)}.{fileMessage.FileExtension.TrimStart('.')}";
 
-			var filePath = Path.Combine(_localDirectory, fileNameWithExtension);
+			var filePath = Path.Combine(LocalDirectory, fileNameWithExtension);
 
 			try
 			{
-				await File.WriteAllBytesAsync(
-					filePath,
-					fileMessage.FileContent,
-					cancellationToken);
+				await File.WriteAllBytesAsync(filePath, fileMessage.FileContent, cancellationToken);
 				_logger.LogInformation($"Файл {fileNameWithExtension} сохранен на диск: {filePath}");
 			}
 			catch (Exception ex)

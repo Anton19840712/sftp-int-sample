@@ -1,5 +1,4 @@
 using common;
-using listener.background;
 using Microsoft.AspNetCore.Connections;
 using RabbitMQ.Client;
 using IConnectionFactory = RabbitMQ.Client.IConnectionFactory;
@@ -30,6 +29,5 @@ IHostBuilder CreateHostBuilder(string[] args) =>
 				};
 				return connectionFactory;
 			});
-
-			services.AddHostedService<ListenerPushSystemServcie>(); // Регистрация как фонового сервиса
+			services.AddSingleton<IHostedService, ListenerPushSystemService>();
 		});
