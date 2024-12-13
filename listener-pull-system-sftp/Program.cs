@@ -1,6 +1,6 @@
 using common;
+using listener.background;
 using Microsoft.AspNetCore.Connections;
-using puller.background;
 using RabbitMQ.Client;
 using IConnectionFactory = RabbitMQ.Client.IConnectionFactory;
 
@@ -17,7 +17,7 @@ IHostBuilder CreateHostBuilder(string[] args) =>
 				Password = AppSettings.Password,
 				Source = AppSettings.Source
 			};
-
+			// регистраци€ сервисов
 			services.AddSingleton(sftpConfig);
 
 			services.AddSingleton<IConnectionFactory>(sp =>
@@ -31,5 +31,5 @@ IHostBuilder CreateHostBuilder(string[] args) =>
 				return connectionFactory;
 			});
 
-			services.AddHostedService<FileDownloadService>(); // –егистраци€ как фонового сервиса
+			services.AddHostedService<ListenerPullSystemServcie>(); // –егистраци€ как фонового сервиса
 		});

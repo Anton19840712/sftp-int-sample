@@ -4,26 +4,26 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace rabbit_listener
+namespace listener.background
 {
-	public class GatewayListenerService : IHostedService
+	public class ListenerPushSystemServcie : IHostedService
 	{
 		private readonly IConnectionFactory _connectionFactory;
-		private readonly ILogger<GatewayListenerService> _logger;
-		private readonly SftpConfig _config;
-		private readonly string _localDirectory = @"C:\Documents1";
+		private readonly ILogger<ListenerPushSystemServcie> _logger;
+
+		// Директория, в которую будут сохраняться зачитанные из очереди push system queue файлы
+		private readonly string _localDirectory = @"C:\sftp-local-push-system-listener-storage";
 		private IConnection _connection;
 		private IModel _channel;
 		private CancellationTokenSource _cts;
 		private Task _listenerTask;
 		private Task _uploadTask;
 
-		public GatewayListenerService(
+		public ListenerPushSystemServcie(
 			SftpConfig config,
 			IConnectionFactory connectionFactory,
-			ILogger<GatewayListenerService> logger)
+			ILogger<ListenerPushSystemServcie> logger)
 		{
-			_config = config;
 			_connectionFactory = connectionFactory;
 			_logger = logger;
 		}
@@ -45,7 +45,7 @@ namespace rabbit_listener
 				_channel = _connection.CreateModel();
 
 				_channel.QueueDeclare(
-					"sftp_queue",
+					"sftp-push-system-queue",
 					durable: true,
 					exclusive: false,
 					autoDelete: false,
@@ -75,7 +75,7 @@ namespace rabbit_listener
 					}
 				};
 
-				_channel.BasicConsume("sftp_queue", false, consumer);
+				_channel.BasicConsume("sftp-push-system-queue", false, consumer);
 			}, cancellationToken);
 		}
 
@@ -99,7 +99,10 @@ namespace rabbit_listener
 
 			try
 			{
-				await File.WriteAllBytesAsync(filePath, fileMessage.FileContent, cancellationToken);
+				await File.WriteAllBytesAsync(
+					filePath,
+					fileMessage.FileContent,
+					cancellationToken);
 				_logger.LogInformation($"Файл {fileNameWithExtension} сохранен на диск: {filePath}");
 			}
 			catch (Exception ex)

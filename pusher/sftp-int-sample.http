@@ -1,6 +1,0 @@
-@sftp_int_sample_HostAddress = http://localhost:5126
-
-GET {{sftp_int_sample_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

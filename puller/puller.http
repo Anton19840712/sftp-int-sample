@@ -1,6 +1,0 @@
-@puller_HostAddress = http://localhost:5003
-
-GET {{puller_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
