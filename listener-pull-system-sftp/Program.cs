@@ -1,4 +1,5 @@
 using common;
+using common.configs;
 using Microsoft.AspNetCore.Connections;
 using RabbitMQ.Client;
 using IConnectionFactory = RabbitMQ.Client.IConnectionFactory;

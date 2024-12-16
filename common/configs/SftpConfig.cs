@@ -1,4 +1,4 @@
-﻿namespace common
+﻿namespace common.configs
 {
 	public class SftpConfig
 	{

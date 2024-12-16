@@ -1,5 +1,8 @@
-using common;
+using common.abstractions;
+using common.configs;
+using common.publisher;
 using Microsoft.AspNetCore.Connections;
+using puller;
 using RabbitMQ.Client;
 using IConnectionFactory = RabbitMQ.Client.IConnectionFactory;
 
@@ -17,6 +20,8 @@ IHostBuilder CreateHostBuilder(string[] args) =>
 				Source = AppSettings.Source
 			};
 
+			services.AddTransient<IPublisher, ToQueuePublisher>();
+			services.AddTransient<IFileProcessorHandler, FileProcessorPullHandler>();
 			services.AddSingleton(sftpConfig);
 
 			services.AddSingleton<IConnectionFactory>(sp =>

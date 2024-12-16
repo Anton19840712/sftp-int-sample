@@ -1,4 +1,4 @@
-﻿using common;
+﻿using common.abstractions;
 using RabbitMQ.Client;
 
 public class ListenerPushSystemService : BaseListenerService

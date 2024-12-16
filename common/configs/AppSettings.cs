@@ -1,10 +1,8 @@
-﻿namespace common
+﻿namespace common.configs
 {
 	public class AppSettings
 	{
 		#region Settings
-
-		//public static string Host => "172.16.205.180";
 		public static string Host => "192.168.31.176";
 		public static int Port => 22;
 		public static string UserName => "tester";

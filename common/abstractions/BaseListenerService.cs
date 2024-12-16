@@ -1,11 +1,12 @@
 ﻿using System.Text;
+using common.models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace common
+namespace common.abstractions
 {
 	public abstract class BaseListenerService : IHostedService
 	{

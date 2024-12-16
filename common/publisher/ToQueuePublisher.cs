@@ -1,22 +1,24 @@
 ﻿using System.Text;
+using common.models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 
-namespace common
+namespace common.publisher
 {
-	public abstract class BaseFileService
+	public class ToQueuePublisher : IPublisher
 	{
-		protected readonly ILogger _logger;
 		private readonly IConnectionFactory _connectionFactory;
+		private readonly ILogger<ToQueuePublisher> _logger;
 
-		protected BaseFileService(IConnectionFactory connectionFactory, ILogger logger)
+		public ToQueuePublisher(IConnectionFactory connectionFactory, ILogger<ToQueuePublisher> logger)
 		{
 			_connectionFactory = connectionFactory;
 			_logger = logger;
 		}
-
-		protected void PublishToQueue(string queueName, FileMessage message)
+		public void PublishToQueue(
+			string queueName,
+			FileMessage message)
 		{
 			using var connection = _connectionFactory.CreateConnection();
 			using var channel = connection.CreateModel();
